@@ -1,0 +1,141 @@
+# SQL1 查询所有列
+
+## 描述
+
+题目：现在运营想要查看用户信息表中所有的数据，请你取出相应结果。
+
+示例：user_profile
+
+| id   | device_id | gender | age  | university | province |
+| ---- | --------- | ------ | ---- | ---------- | -------- |
+| 1    | 2138      | male   | 21   | 北京大学   | Beijing  |
+| 2    | 3214      | male   |      | 复旦大学   | Shanghai |
+| 3    | 6543      | female | 20   | 北京大学   | Beijing  |
+| 4    | 2315      | female | 23   | 浙江大学   | ZheJiang |
+| 5    | 5432      | male   | 25   | 山东大学   | Shandong |
+
+根据示例，你的查询应返回以下结果:
+
+| id   | device_id | gender | age  | university | province |
+| ---- | --------- | ------ | ---- | ---------- | -------- |
+| 1    | 2138      | male   | 21   | 北京大学   | Beijing  |
+| 2    | 3214      | male   |      | 复旦大学   | Shanghai |
+| 3    | 6543      | female | 20   | 北京大学   | Beijing  |
+| 4    | 2315      | female | 23   | 浙江大学   | Zhejiang |
+| 5    | 5432      | male   | 25   | 山东大学   | Shandong |
+
+## 示例1
+
+输入：
+
+```
+drop table if exists user_profile;
+CREATE TABLE `user_profile` (
+`id` int NOT NULL,
+`device_id` int NOT NULL,
+`gender` varchar(14) NOT NULL,
+`age` int ,
+`university` varchar(32) NOT NULL,
+`province` varchar(32)  NOT NULL);
+INSERT INTO user_profile VALUES(1,2138,'male',21,'北京大学','BeiJing');
+INSERT INTO user_profile VALUES(2,3214,'male',null,'复旦大学','Shanghai');
+INSERT INTO user_profile VALUES(3,6543,'female',20,'北京大学','BeiJing');
+INSERT INTO user_profile VALUES(4,2315,'female',23,'浙江大学','ZheJiang');
+INSERT INTO user_profile VALUES(5,5432,'male',25,'山东大学','Shandong');
+```
+
+输出：
+
+```
+1|2138|male|21|北京大学|BeiJing
+2|3214|male|None|复旦大学|Shanghai
+3|6543|female|20|北京大学|BeiJing
+4|2315|female|23|浙江大学|ZheJiang
+5|5432|male|25|山东大学|Shandong
+```
+
+## 解析
+
+```
+SELECT 
+	id,device_id,gender,age,university,province 
+	FROM user_profile
+```
+
+### **不建议使用``SELECT *``的原因：**
+
+1. 节省资源，减少网络开销。
+2. 无法使用覆盖索引。
+	* 回表：二级索引中匹配到的记录中会有对应的索引列和主键值，根据这个主键值回到聚簇索引（也就是主键索引）中查询对应的完整用户记录，这个过程就是回表。
+3. 拖慢``JOIN``连接查询
+	* 对于**嵌套循环连接（Nested-LoopJoin，NLJ）**连接查询而言，驱动表只被访问一遍，被驱动表访问次数取决于驱动表中符合条件的条数，因此可以通过在被驱动表涉及到连接条件的字段上创建索引来加快连接速度。为了让索引生效，同样应该避免``SELECT *``。
+	* **基于块的嵌套循环连接（Block Nested-Loop Join，BLJ）**和**``hash join``**通过固定大小的内存区域``join buffer``来存储若干条驱动表结果集中的记录，被驱动表记录加载到内存时可一次性与多条驱动表记录进行匹配，在内存中匹配可以显著减少被驱动表的I/O代价。
+
+------
+
+# SQL2 查询多列
+
+## 描述
+
+题目：现在运营同学想要用户的设备id对应的性别、年龄和学校的数据，请你取出相应数据
+
+示例：user_profile
+
+| id   | device_id | gender | age  | university | province |
+| ---- | --------- | ------ | ---- | ---------- | -------- |
+| 1    | 2138      | male   | 21   | 北京大学   | Beijing  |
+| 2    | 3214      | male   |      | 复旦大学   | Shanghai |
+| 3    | 6543      | female | 20   | 北京大学   | Beijing  |
+| 4    | 2315      | female | 23   | 浙江大学   | ZheJiang |
+| 5    | 5432      | male   | 25   | 山东大学   | Shandong |
+
+根据示例，你的查询应返回以下结果
+
+| device_id | gender | age  | university |
+| --------- | ------ | ---- | ---------- |
+| 2138      | male   | 21   | 北京大学   |
+| 3214      | male   |      | 复旦大学   |
+| 6543      | female | 20   | 北京大学   |
+| 2315      | female | 23   | 浙江大学   |
+| 5432      | male   | 25   | 山东大学   |
+
+## 示例1
+
+输入：
+
+```
+drop table if exists user_profile;
+CREATE TABLE `user_profile` (
+`id` int NOT NULL,
+`device_id` int NOT NULL,
+`gender` varchar(14) NOT NULL,
+`age` int ,
+`university` varchar(32) NOT NULL,
+`province` varchar(32)  NOT NULL);
+INSERT INTO user_profile VALUES(1,2138,'male',21,'北京大学','BeiJing');
+INSERT INTO user_profile VALUES(2,3214,'male',null,'复旦大学','Shanghai');
+INSERT INTO user_profile VALUES(3,6543,'female',20,'北京大学','BeiJing');
+INSERT INTO user_profile VALUES(4,2315,'female',23,'浙江大学','ZheJiang');
+INSERT INTO user_profile VALUES(5,5432,'male',25,'山东大学','Shandong');
+```
+
+输出：
+
+```
+2138|male|21|北京大学
+3214|male|None|复旦大学
+6543|female|20|北京大学
+2315|female|23|浙江大学
+5432|male|25|山东大学
+```
+
+## 解析
+
+```
+SELECT 
+	device_id,gender,age,university
+	FROM user_profile
+```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
